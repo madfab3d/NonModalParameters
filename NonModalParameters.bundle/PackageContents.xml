@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- OS / Platform : valeurs à confirmer avec Autodesk lors de la soumission (voir publication/SUBMISSION_GUIDE.md) -->
+<ApplicationPackage SchemaVersion="1.0"
+                    ProductType="Application"
+                    AutodeskProduct="Fusion360"
+                    Name="NonModalParameters"
+                    Description="Non-modal palette to view, edit, add and delete user and model parameters."
+                    AppVersion="1.0.0"
+                    Author="MadFab3D"
+                    ProductCode="{43687b9f-22d1-4f18-9963-2f3910bf5d34}"
+                    UpgradeCode="{9b2e6c1a-5d37-4f80-a1c4-7e3f0d8b6a52}">
+  <CompanyDetails Name="MadFab3D" Url="" Email="MadFab3D44@gmail.com" />
+  <Components>
+    <RuntimeRequirements OS="Win64" Platform="Fusion 360" />
+    <ComponentEntry AppName="NonModalParameters"
+                    Version="1.0.0"
+                    ModuleName="./Contents/NonModalParameters/NonModalParameters.manifest"
+                    AppDescription="Non-modal palette to view, edit, add and delete user and model parameters."
+                    Author="MadFab3D" />
+  </Components>
+</ApplicationPackage>

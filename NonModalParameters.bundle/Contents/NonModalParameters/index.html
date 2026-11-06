@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick Parameters</title>
+<style>
+    /* ------------------------------------------------------------------
+       Thèmes : la palette suit le thème de l'interface Fusion (data-theme).
+       Les couleurs ci-dessous sont des approximations : pour les ajuster,
+       modifiez uniquement --bg, --panel, --field et --line de chaque thème.
+       ------------------------------------------------------------------ */
+    :root {
+        color-scheme: dark;
+        --bg: #2f2f2f;
+        --panel: #383838;
+        --field: #232323;
+        --line: #4a4a4a;
+        --line-soft: #3d3d3d;
+        --text: #e8e8e8;
+        --muted: #a3a3a3;
+        --accent: #5aa9e6;
+        --onaccent: #10222f;
+        --warn: #e3b341;
+        --danger: #f0707a;
+        --ondanger: #1b1b1b;
+        --ok: #6cc08b;
+        --mono: Consolas, "SF Mono", Menlo, "Liberation Mono", monospace;
+    }
+    :root[data-theme="darkblue"] {
+        --bg: #26323f; --panel: #2f3d4c; --field: #1c2630; --line: #43546a; --line-soft: #364658;
+        --text: #e6ebf1; --muted: #9db0c4;
+    }
+    :root[data-theme="lightgray"], :root[data-theme="classic"] {
+        color-scheme: light;
+        --bg: #f1f1f1; --panel: #e3e3e3; --field: #ffffff; --line: #c2c2c2; --line-soft: #d9d9d9;
+        --text: #1f1f1f; --muted: #5f5f5f; --accent: #0a6dc2; --onaccent: #ffffff;
+        --warn: #a86b00; --danger: #c62832; --ondanger: #ffffff; --ok: #1e7d3a;
+    }
+    :root[data-theme="classic"] { --bg: #e9ecef; --panel: #dce1e6; --line: #bcc3cb; --line-soft: #d3d8de; }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.4 "Segoe UI", system-ui, -apple-system, "Microsoft YaHei UI", "Yu Gothic UI", sans-serif;
+    }
+    [hidden] { display: none !important; }
+    input, select, textarea, button { font: inherit; }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+    /* Barre du haut */
+    .top { display: flex; gap: 6px; padding: 10px 10px 8px; }
+    #search, #lang, .form input[type="text"], .form select {
+        padding: 6px 8px;
+        background: var(--field);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+    }
+    #search { flex: 1; min-width: 0; }
+    #lang { width: 86px; padding: 0 4px; }
+    #search:focus, #lang:focus, .form input:focus, .form select:focus, .cmt:focus {
+        outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
+    }
+    #refresh {
+        width: 32px;
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    #refresh:hover { color: var(--text); border-color: var(--muted); }
+
+    /* Largeurs des colonnes (redimensionnables, partagées par l'en-tête et les lignes) */
+    :root { --w-name: 140px; --w-unit: 52px; --w-expr: 200px; --w-val: 100px; }
+
+    .colhead, .row {
+        display: grid;
+        column-gap: 6px;
+        grid-template-columns: 26px minmax(0, 1fr) auto auto;
+    }
+    .colhead { display: none; }
+
+    #list { flex: 1; overflow: auto; padding: 0 10px 12px; }
+    #list::-webkit-scrollbar { width: 8px; }
+    #list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+    /* Sections : Favoris / Paramètres utilisateur / Paramètres du modèle */
+    .sec { margin-top: 6px; }
+    .sechead {
+        display: flex;
+        align-items: center;
+        background: var(--panel);
+        border: 1px solid var(--line-soft);
+        border-radius: 4px;
+    }
+    .sectoggle {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        background: none;
+        color: var(--text);
+        border: 0;
+        text-align: left;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .chev { width: 12px; color: var(--muted); font-size: 11px; }
+    .count { margin-left: 2px; color: var(--muted); font-weight: 400; font-size: 12px; }
+    .secadd {
+        width: 28px;
+        height: 28px;
+        margin-right: 2px;
+        background: none;
+        color: var(--accent);
+        border: 0;
+        border-radius: 4px;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .secadd:hover { background: var(--line-soft); }
+
+    .row { align-items: center; row-gap: 5px; padding: 10px 0; border-bottom: 1px solid var(--line-soft);
+           grid-template-areas: "star name val del" "expr expr expr expr" "cmt cmt cmt cmt" "msg msg msg msg"; }
+    .star { grid-area: star; padding: 0; background: none; border: 0; color: var(--muted); font-size: 17px; line-height: 1; cursor: pointer; }
+    .star:hover, .star.on { color: var(--warn); }
+    .name { grid-area: name; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .unit { grid-area: unit; display: none; color: var(--muted); font-family: var(--mono); font-size: 12px; }
+    .val { grid-area: val; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font: 12px var(--mono); }
+    .del {
+        grid-area: del;
+        padding: 0 6px;
+        background: none;
+        color: var(--muted);
+        border: 1px solid transparent;
+        border-radius: 3px;
+        line-height: 18px;
+        cursor: pointer;
+    }
+    .del:hover { color: var(--danger); border-color: var(--line); }
+    .del.confirm { color: var(--ondanger); background: var(--danger); border-color: var(--danger); font-weight: 600; }
+
+    .expr, .cmt {
+        display: block;
+        width: 100%;
+        padding: 6px 8px;
+        background: var(--field);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        transition: border-color .25s;
+    }
+    .expr {
+        grid-area: expr;
+        resize: none;
+        overflow: hidden;
+        font: 12.5px/1.5 var(--mono);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    .cmt { grid-area: cmt; font-size: 12px; }
+    .cmt::placeholder { color: var(--muted); opacity: .7; }
+    .expr:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .row.dirty .expr, .cmt.dirty { border-color: var(--warn); }
+    .row.error .expr { border-color: var(--danger); }
+    .row.error .expr:focus { box-shadow: 0 0 0 1px var(--danger); }
+    .row.saved .expr { border-color: var(--ok); }
+
+    .msg { grid-area: msg; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+    .msg:empty { display: none; }
+    .row.dirty .msg { color: var(--warn); }
+    .row.error .msg { color: var(--danger); }
+
+    .empty { padding: 20px 12px; text-align: center; color: var(--muted); line-height: 1.6; }
+
+    /* Mode large : tableau à colonnes, comme la fenêtre « Modifier les paramètres ».
+       L'en-tête et les lignes utilisent exactement les mêmes colonnes, donc restent alignés. */
+    @media (min-width: 760px) {
+        .colhead, .row {
+            grid-template-columns: 26px var(--w-name) var(--w-unit) var(--w-expr) var(--w-val) minmax(110px, 1fr) 84px;
+            min-width: calc(26px + var(--w-name) + var(--w-unit) + var(--w-expr) + var(--w-val) + 110px + 84px + 36px);
+        }
+        .colhead {
+            display: grid;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 8px 0 6px;
+            background: var(--bg);
+            color: var(--muted);
+            font-size: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+        .row {
+            align-items: start;
+            grid-template-areas: "star name unit expr val cmt del" ". . . msg msg msg .";
+        }
+        .name, .unit, .val { padding-top: 6px; }
+        .unit { display: block; }
+        .val { max-width: none; }
+        .star { padding-top: 5px; }
+    }
+
+    /* Cellules d'en-tête et poignées de redimensionnement */
+    .hc { position: relative; min-width: 0; }
+    .lbl { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hc.pad .lbl { padding-left: 9px; }   /* aligne le libellé sur le texte saisi dans les champs */
+    .grip {
+        position: absolute;
+        top: -4px;
+        bottom: -4px;
+        right: -9px;
+        width: 12px;
+        cursor: col-resize;
+        touch-action: none;
+    }
+    .grip::after {
+        content: "";
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        left: 5px;
+        width: 2px;
+        border-radius: 1px;
+        background: var(--line);
+    }
+    .grip:hover::after, .grip:focus-visible::after, .grip.drag::after { background: var(--accent); }
+    .grip:focus-visible { outline: none; }
+
+    /* Formulaire d'ajout */
+    #footer { padding: 8px 10px 10px; border-top: 1px solid var(--line); background: var(--panel); }
+    .btn {
+        padding: 7px 12px;
+        border-radius: 4px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+    }
+    .btn:hover { border-color: var(--muted); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--onaccent); font-weight: 600; }
+    .btn.primary:hover { filter: brightness(1.08); }
+    .form { display: grid; gap: 8px; }
+    .form label { display: grid; gap: 3px; color: var(--muted); font-size: 12px; }
+    .form input[type="text"], .form select { width: 100%; }
+    .form .mono { font-family: var(--mono); font-size: 12.5px; }
+    .form .pair { display: grid; grid-template-columns: 1fr 96px; gap: 8px; }
+    .form .check { display: flex; align-items: center; gap: 6px; color: var(--text); font-size: 13px; }
+    .form .actions { display: flex; gap: 8px; justify-content: flex-end; }
+    #add-error { color: var(--danger); font-size: 11.5px; overflow-wrap: anywhere; }
+    #add-error:empty { display: none; }
+</style>
+</head>
+<body>
+
+    <div class="top">
+        <input id="search" type="search" data-i18n-ph="filter" data-i18n-aria="filter">
+        <select id="lang" data-i18n-title="language"></select>
+        <button id="refresh" data-i18n-title="refresh">↻</button>
+    </div>
+
+    <div id="list">
+        <div class="colhead" id="colhead">
+            <div class="hc"></div>
+            <div class="hc"><span class="lbl" data-i18n="colName"></span><span class="grip" data-col="name" role="separator" aria-orientation="vertical" tabindex="0" data-i18n-title="resizeCol"></span></div>
+            <div class="hc"><span class="lbl" data-i18n="colUnit"></span><span class="grip" data-col="unit" role="separator" aria-orientation="vertical" tabindex="0" data-i18n-title="resizeCol"></span></div>
+            <div class="hc pad"><span class="lbl" data-i18n="colExpr"></span><span class="grip" data-col="expr" role="separator" aria-orientation="vertical" tabindex="0" data-i18n-title="resizeCol"></span></div>
+            <div class="hc"><span class="lbl" data-i18n="colValue"></span><span class="grip" data-col="val" role="separator" aria-orientation="vertical" tabindex="0" data-i18n-title="resizeCol"></span></div>
+            <div class="hc pad"><span class="lbl" data-i18n="colComment"></span></div>
+            <div class="hc"></div>
+        </div>
+    </div>
+
+    <div id="footer" hidden>
+        <div id="add-form" class="form">
+            <label><span data-i18n="fName"></span>
+                <input id="f-name" type="text" autocomplete="off" spellcheck="false">
+            </label>
+            <div class="pair">
+                <label><span data-i18n="fExpr"></span>
+                    <input id="f-expr" class="mono" type="text" autocomplete="off" spellcheck="false">
+                </label>
+                <label><span data-i18n="fUnit"></span>
+                    <select id="f-unit"></select>
+                </label>
+            </div>
+            <label><span data-i18n="fComment"></span>
+                <input id="f-comment" type="text" autocomplete="off">
+            </label>
+            <label class="check"><input id="f-fav" type="checkbox"><span data-i18n="fFav"></span></label>
+            <div id="add-error"></div>
+            <div class="actions">
+                <button id="add-cancel" class="btn" data-i18n="cancel"></button>
+                <button id="add-submit" class="btn primary" data-i18n="create"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const $ = s => document.querySelector(s);
+        const list = $('#list');
+        const colhead = $('#colhead');
+        const state = {
+            items: [], loaded: false, filter: '', errors: {}, flash: null, defaultUnit: 'mm',
+            collapsed: { fav: false, user: false, model: false }
+        };
+        let rendering = false;
+        let lastRequest = 0;
+        let lastRaw = null;
+
+        /* ---------- Largeur des colonnes ---------- */
+        const COLS = {
+            name: { prop: '--w-name', min: 70, def: 140 },
+            unit: { prop: '--w-unit', min: 36, def: 52 },
+            expr: { prop: '--w-expr', min: 120, def: 200 },
+            val:  { prop: '--w-val',  min: 60,  def: 100 }
+        };
+        const colWidths = {};
+        let dragging = false;
+        let fitQueued = false;
+
+        function refitAll() {
+            if (fitQueued) return;
+            fitQueued = true;
+            requestAnimationFrame(() => {
+                fitQueued = false;
+                list.querySelectorAll('.expr').forEach(fit);
+            });
+        }
+
+        function setCol(key, px) {
+            const c = COLS[key];
+            px = Math.max(c.min, Math.min(700, Math.round(px)));
+            colWidths[key] = px;
+            document.documentElement.style.setProperty(c.prop, px + 'px');
+            refitAll();
+        }
+
+        function applyColumns(cols) {
+            if (dragging || !cols) return;
+            Object.keys(COLS).forEach(k => { if (typeof cols[k] === 'number') setCol(k, cols[k]); });
+        }
+
+        function saveColumns() { send('setColumns', colWidths); }
+
+        document.querySelectorAll('.grip').forEach(grip => {
+            const key = grip.dataset.col;
+            grip.addEventListener('pointerdown', e => {
+                e.preventDefault();
+                const startX = e.clientX;
+                const startW = grip.parentElement.getBoundingClientRect().width || COLS[key].def;
+                dragging = true;
+                grip.classList.add('drag');
+                grip.setPointerCapture(e.pointerId);
+                const move = ev => setCol(key, startW + ev.clientX - startX);
+                const up = () => {
+                    grip.removeEventListener('pointermove', move);
+                    grip.removeEventListener('pointerup', up);
+                    grip.removeEventListener('pointercancel', up);
+                    grip.classList.remove('drag');
+                    dragging = false;
+                    saveColumns();
+                };
+                grip.addEventListener('pointermove', move);
+                grip.addEventListener('pointerup', up);
+                grip.addEventListener('pointercancel', up);
+            });
+            // Double-clic : largeur par défaut ; flèches gauche/droite : ajustement au clavier
+            grip.addEventListener('dblclick', () => { setCol(key, COLS[key].def); saveColumns(); });
+            grip.addEventListener('keydown', e => {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                e.preventDefault();
+                setCol(key, (colWidths[key] || COLS[key].def) + (e.key === 'ArrowRight' ? 10 : -10));
+                saveColumns();
+            });
+        });
+
+        /* ---------- Traductions ---------- */
+        const I18N = {
+            en: {
+                filter: "Search name, formula, comment, sketch…",
+                refresh: "Refresh",
+                language: "Language",
+                auto: "Auto",
+                loading: "Loading…",
+                noConn: "Cannot connect to Fusion.",
+                noResult: "No results for “{q}”.",
+                emptyUser: "No user parameters in this document. Add one with the + button.",
+                hint: "Enter applies, Esc cancels.",
+                invalid: "Invalid expression.",
+                add: "Add parameter",
+                fName: "Name",
+                fExpr: "Value or formula",
+                fUnit: "Unit",
+                fComment: "Comment (optional)",
+                fFav: "Add to favorites",
+                unitless: "Unitless",
+                create: "Create",
+                cancel: "Cancel",
+                'del': "Delete",
+                confirmDel: "Confirm",
+                errPrefix: "Error: ",
+                secFav: "Favorites",
+                secUser: "User Parameters",
+                secModel: "Model Parameters",
+                colName: "Name",
+                colUnit: "Unit",
+                colExpr: "Expression",
+                colValue: "Value",
+                colComment: "Comments",
+                commentPh: "Add a comment",
+                favAdd: "Add to favorites",
+                favRemove: "Remove from favorites",
+                e_missing: "Enter a name and a value.",
+                e_no_design: "No active design document.",
+                e_not_found: "Parameter not found.",
+                e_exists: "A parameter with this name already exists.",
+                e_in_use: "Cannot delete: this parameter is used by the model or by another parameter.",
+                e_not_user: "Only user parameters can be deleted.",
+                e_empty: "The formula is empty.",
+                e_parens: "Unbalanced parentheses: every “(” needs a matching “)”.",
+                e_unknown: "Unknown name: {names}. It is not a parameter, a function or a unit.",
+                e_self: "A parameter cannot refer to itself.",
+                e_formula: "Incorrect formula. Check parameter names, units and parentheses.",
+                e_name: "Invalid name: use letters, digits and underscores only, and do not start with a digit.",
+                resizeCol: "Drag to resize column (double-click to reset)"
+            },
+            fr: {
+                filter: "Rechercher nom, formule, commentaire, esquisse…",
+                refresh: "Rafraîchir",
+                language: "Langue",
+                auto: "Auto",
+                loading: "Chargement…",
+                noConn: "Connexion à Fusion impossible.",
+                noResult: "Aucun résultat pour « {q} ».",
+                emptyUser: "Aucun paramètre utilisateur dans ce document. Ajoutez-en avec le bouton +.",
+                hint: "Entrée applique, Échap annule.",
+                invalid: "Expression invalide.",
+                add: "Ajouter un paramètre",
+                fName: "Nom",
+                fExpr: "Valeur ou formule",
+                fUnit: "Unité",
+                fComment: "Commentaire (facultatif)",
+                fFav: "Ajouter aux favoris",
+                unitless: "Sans unité",
+                create: "Créer",
+                cancel: "Annuler",
+                'del': "Supprimer",
+                confirmDel: "Confirmer",
+                errPrefix: "Erreur : ",
+                secFav: "Favoris",
+                secUser: "Paramètres utilisateur",
+                secModel: "Paramètres du modèle",
+                colName: "Nom",
+                colUnit: "Unité",
+                colExpr: "Expression",
+                colValue: "Valeur",
+                colComment: "Commentaires",
+                commentPh: "Ajouter un commentaire",
+                favAdd: "Ajouter aux favoris",
+                favRemove: "Retirer des favoris",
+                e_missing: "Indiquez un nom et une valeur.",
+                e_no_design: "Aucun document de conception actif.",
+                e_not_found: "Paramètre introuvable.",
+                e_exists: "Un paramètre porte déjà ce nom.",
+                e_in_use: "Suppression impossible : ce paramètre est utilisé par le modèle ou par un autre paramètre.",
+                e_not_user: "Seuls les paramètres utilisateur peuvent être supprimés.",
+                e_empty: "La formule est vide.",
+                e_parens: "Parenthèses non appariées : chaque « ( » doit avoir son « ) ».",
+                e_unknown: "Nom inconnu : {names}. Ce n’est ni un paramètre, ni une fonction, ni une unité.",
+                e_self: "Un paramètre ne peut pas se référencer lui-même.",
+                e_formula: "Formule incorrecte. Vérifiez les noms de paramètres, les unités et les parenthèses.",
+                e_name: "Nom invalide : lettres, chiffres et _ uniquement, sans commencer par un chiffre.",
+                resizeCol: "Glisser pour redimensionner la colonne (double-clic : réinitialiser)"
+            },
+            de: {
+                filter: "Name, Formel, Kommentar, Skizze suchen…",
+                refresh: "Aktualisieren",
+                language: "Sprache",
+                auto: "Auto",
+                loading: "Wird geladen…",
+                noConn: "Verbindung zu Fusion nicht möglich.",
+                noResult: "Keine Ergebnisse für „{q}“.",
+                emptyUser: "Keine Benutzerparameter in diesem Dokument. Fügen Sie mit der Schaltfläche + einen hinzu.",
+                hint: "Enter übernimmt, Esc verwirft.",
+                invalid: "Ungültiger Ausdruck.",
+                add: "Parameter hinzufügen",
+                fName: "Name",
+                fExpr: "Wert oder Formel",
+                fUnit: "Einheit",
+                fComment: "Kommentar (optional)",
+                fFav: "Zu Favoriten hinzufügen",
+                unitless: "Einheitenlos",
+                create: "Erstellen",
+                cancel: "Abbrechen",
+                'del': "Löschen",
+                confirmDel: "Bestätigen",
+                errPrefix: "Fehler: ",
+                secFav: "Favoriten",
+                secUser: "Benutzerparameter",
+                secModel: "Modellparameter",
+                colName: "Name",
+                colUnit: "Einheit",
+                colExpr: "Ausdruck",
+                colValue: "Wert",
+                colComment: "Kommentare",
+                commentPh: "Kommentar hinzufügen",
+                favAdd: "Zu Favoriten hinzufügen",
+                favRemove: "Aus Favoriten entfernen",
+                e_missing: "Geben Sie einen Namen und einen Wert ein.",
+                e_no_design: "Kein aktives Konstruktionsdokument.",
+                e_not_found: "Parameter nicht gefunden.",
+                e_exists: "Ein Parameter mit diesem Namen existiert bereits.",
+                e_in_use: "Löschen nicht möglich: Der Parameter wird vom Modell oder von einem anderen Parameter verwendet.",
+                e_not_user: "Nur Benutzerparameter können gelöscht werden.",
+                e_empty: "Die Formel ist leer.",
+                e_parens: "Klammern nicht ausgeglichen: Jede „(“ braucht eine passende „)“.",
+                e_unknown: "Unbekannter Name: {names}. Es ist weder ein Parameter noch eine Funktion oder Einheit.",
+                e_self: "Ein Parameter kann sich nicht selbst referenzieren.",
+                e_formula: "Falsche Formel. Prüfen Sie Parameternamen, Einheiten und Klammern.",
+                e_name: "Ungültiger Name: nur Buchstaben, Ziffern und Unterstriche, nicht mit einer Ziffer beginnen.",
+                resizeCol: "Ziehen, um die Spaltenbreite zu ändern (Doppelklick: zurücksetzen)"
+            },
+            es: {
+                filter: "Buscar nombre, fórmula, comentario, boceto…",
+                refresh: "Actualizar",
+                language: "Idioma",
+                auto: "Auto",
+                loading: "Cargando…",
+                noConn: "No se puede conectar con Fusion.",
+                noResult: "Sin resultados para «{q}».",
+                emptyUser: "No hay parámetros de usuario en este documento. Añada uno con el botón +.",
+                hint: "Intro aplica, Esc cancela.",
+                invalid: "Expresión no válida.",
+                add: "Añadir parámetro",
+                fName: "Nombre",
+                fExpr: "Valor o fórmula",
+                fUnit: "Unidad",
+                fComment: "Comentario (opcional)",
+                fFav: "Añadir a favoritos",
+                unitless: "Sin unidad",
+                create: "Crear",
+                cancel: "Cancelar",
+                'del': "Eliminar",
+                confirmDel: "Confirmar",
+                errPrefix: "Error: ",
+                secFav: "Favoritos",
+                secUser: "Parámetros de usuario",
+                secModel: "Parámetros del modelo",
+                colName: "Nombre",
+                colUnit: "Unidad",
+                colExpr: "Expresión",
+                colValue: "Valor",
+                colComment: "Comentarios",
+                commentPh: "Añadir un comentario",
+                favAdd: "Añadir a favoritos",
+                favRemove: "Quitar de favoritos",
+                e_missing: "Indique un nombre y un valor.",
+                e_no_design: "No hay ningún documento de diseño activo.",
+                e_not_found: "Parámetro no encontrado.",
+                e_exists: "Ya existe un parámetro con ese nombre.",
+                e_in_use: "No se puede eliminar: el parámetro lo usan el modelo u otro parámetro.",
+                e_not_user: "Solo se pueden eliminar parámetros de usuario.",
+                e_empty: "La fórmula está vacía.",
+                e_parens: "Paréntesis desbalanceados: cada «(» necesita su «)».",
+                e_unknown: "Nombre desconocido: {names}. No es un parámetro, una función ni una unidad.",
+                e_self: "Un parámetro no puede hacer referencia a sí mismo.",
+                e_formula: "Fórmula incorrecta. Compruebe los nombres de parámetros, las unidades y los paréntesis.",
+                e_name: "Nombre no válido: solo letras, dígitos y guiones bajos, sin empezar por un dígito.",
+                resizeCol: "Arrastre para cambiar el ancho de la columna (doble clic: restablecer)"
+            },
+            it: {
+                filter: "Cerca nome, formula, commento, schizzo…",
+                refresh: "Aggiorna",
+                language: "Lingua",
+                auto: "Auto",
+                loading: "Caricamento…",
+                noConn: "Impossibile connettersi a Fusion.",
+                noResult: "Nessun risultato per «{q}».",
+                emptyUser: "Nessun parametro utente in questo documento. Aggiungine uno con il pulsante +.",
+                hint: "Invio applica, Esc annulla.",
+                invalid: "Espressione non valida.",
+                add: "Aggiungi parametro",
+                fName: "Nome",
+                fExpr: "Valore o formula",
+                fUnit: "Unità",
+                fComment: "Commento (facoltativo)",
+                fFav: "Aggiungi ai preferiti",
+                unitless: "Senza unità",
+                create: "Crea",
+                cancel: "Annulla",
+                'del': "Elimina",
+                confirmDel: "Conferma",
+                errPrefix: "Errore: ",
+                secFav: "Preferiti",
+                secUser: "Parametri utente",
+                secModel: "Parametri del modello",
+                colName: "Nome",
+                colUnit: "Unità",
+                colExpr: "Espressione",
+                colValue: "Valore",
+                colComment: "Commenti",
+                commentPh: "Aggiungi un commento",
+                favAdd: "Aggiungi ai preferiti",
+                favRemove: "Rimuovi dai preferiti",
+                e_missing: "Inserisci un nome e un valore.",
+                e_no_design: "Nessun documento di progetto attivo.",
+                e_not_found: "Parametro non trovato.",
+                e_exists: "Esiste già un parametro con questo nome.",
+                e_in_use: "Impossibile eliminare: il parametro è usato dal modello o da un altro parametro.",
+                e_not_user: "Si possono eliminare solo i parametri utente.",
+                e_empty: "La formula è vuota.",
+                e_parens: "Parentesi non bilanciate: ogni «(» richiede una «)».",
+                e_unknown: "Nome sconosciuto: {names}. Non è un parametro, una funzione né un’unità.",
+                e_self: "Un parametro non può fare riferimento a se stesso.",
+                e_formula: "Formula non corretta. Controlla nomi dei parametri, unità e parentesi.",
+                e_name: "Nome non valido: solo lettere, cifre e trattini bassi, senza iniziare con una cifra.",
+                resizeCol: "Trascina per ridimensionare la colonna (doppio clic: ripristina)"
+            },
+            pt: {
+                filter: "Buscar nome, fórmula, comentário, esboço…",
+                refresh: "Atualizar",
+                language: "Idioma",
+                auto: "Auto",
+                loading: "Carregando…",
+                noConn: "Não foi possível conectar ao Fusion.",
+                noResult: "Nenhum resultado para “{q}”.",
+                emptyUser: "Nenhum parâmetro de usuário neste documento. Adicione um com o botão +.",
+                hint: "Enter aplica, Esc cancela.",
+                invalid: "Expressão inválida.",
+                add: "Adicionar parâmetro",
+                fName: "Nome",
+                fExpr: "Valor ou fórmula",
+                fUnit: "Unidade",
+                fComment: "Comentário (opcional)",
+                fFav: "Adicionar aos favoritos",
+                unitless: "Sem unidade",
+                create: "Criar",
+                cancel: "Cancelar",
+                'del': "Excluir",
+                confirmDel: "Confirmar",
+                errPrefix: "Erro: ",
+                secFav: "Favoritos",
+                secUser: "Parâmetros do usuário",
+                secModel: "Parâmetros do modelo",
+                colName: "Nome",
+                colUnit: "Unidade",
+                colExpr: "Expressão",
+                colValue: "Valor",
+                colComment: "Comentários",
+                commentPh: "Adicionar um comentário",
+                favAdd: "Adicionar aos favoritos",
+                favRemove: "Remover dos favoritos",
+                e_missing: "Informe um nome e um valor.",
+                e_no_design: "Nenhum documento de design ativo.",
+                e_not_found: "Parâmetro não encontrado.",
+                e_exists: "Já existe um parâmetro com esse nome.",
+                e_in_use: "Não é possível excluir: o parâmetro é usado pelo modelo ou por outro parâmetro.",
+                e_not_user: "Somente parâmetros de usuário podem ser excluídos.",
+                e_empty: "A fórmula está vazia.",
+                e_parens: "Parênteses desbalanceados: cada “(” precisa de um “)”.",
+                e_unknown: "Nome desconhecido: {names}. Não é um parâmetro, uma função nem uma unidade.",
+                e_self: "Um parâmetro não pode referenciar a si mesmo.",
+                e_formula: "Fórmula incorreta. Verifique os nomes dos parâmetros, as unidades e os parênteses.",
+                e_name: "Nome inválido: use apenas letras, dígitos e sublinhados, sem começar por um dígito.",
+                resizeCol: "Arraste para redimensionar a coluna (clique duplo: redefinir)"
+            },
+            ja: {
+                filter: "名前・式・コメント・スケッチを検索…",
+                refresh: "更新",
+                language: "言語",
+                auto: "自動",
+                loading: "読み込み中…",
+                noConn: "Fusion に接続できません。",
+                noResult: "「{q}」に一致する結果はありません。",
+                emptyUser: "このドキュメントにはユーザー パラメータがありません。+ ボタンで追加してください。",
+                hint: "Enter で適用、Esc で取り消し。",
+                invalid: "式が正しくありません。",
+                add: "パラメータを追加",
+                fName: "名前",
+                fExpr: "値または式",
+                fUnit: "単位",
+                fComment: "コメント（任意）",
+                fFav: "お気に入りに追加",
+                unitless: "単位なし",
+                create: "作成",
+                cancel: "キャンセル",
+                'del': "削除",
+                confirmDel: "確認",
+                errPrefix: "エラー: ",
+                secFav: "お気に入り",
+                secUser: "ユーザー パラメータ",
+                secModel: "モデル パラメータ",
+                colName: "名前",
+                colUnit: "単位",
+                colExpr: "式",
+                colValue: "値",
+                colComment: "コメント",
+                commentPh: "コメントを追加",
+                favAdd: "お気に入りに追加",
+                favRemove: "お気に入りから削除",
+                e_missing: "名前と値を入力してください。",
+                e_no_design: "アクティブな設計ドキュメントがありません。",
+                e_not_found: "パラメータが見つかりません。",
+                e_exists: "同じ名前のパラメータが既にあります。",
+                e_in_use: "削除できません。このパラメータはモデルまたは他のパラメータで使用されています。",
+                e_not_user: "削除できるのはユーザー パラメータのみです。",
+                e_empty: "式が空です。",
+                e_parens: "かっこの数が合っていません。「(」と「)」を対応させてください。",
+                e_unknown: "不明な名前: {names}。パラメータ、関数、単位のいずれでもありません。",
+                e_self: "パラメータは自分自身を参照できません。",
+                e_formula: "式が正しくありません。パラメータ名、単位、かっこを確認してください。",
+                e_name: "名前が正しくありません。英数字とアンダースコアのみ使用でき、数字で始めることはできません。",
+                resizeCol: "ドラッグで列の幅を変更（ダブルクリックで初期化）"
+            },
+            zh: {
+                filter: "搜索名称、公式、注释、草图…",
+                refresh: "刷新",
+                language: "语言",
+                auto: "自动",
+                loading: "加载中…",
+                noConn: "无法连接到 Fusion。",
+                noResult: "没有与“{q}”匹配的结果。",
+                emptyUser: "此文档中没有用户参数。请使用 + 按钮添加。",
+                hint: "按 Enter 应用，按 Esc 取消。",
+                invalid: "表达式无效。",
+                add: "添加参数",
+                fName: "名称",
+                fExpr: "值或公式",
+                fUnit: "单位",
+                fComment: "注释（可选）",
+                fFav: "添加到收藏夹",
+                unitless: "无单位",
+                create: "创建",
+                cancel: "取消",
+                'del': "删除",
+                confirmDel: "确认",
+                errPrefix: "错误：",
+                secFav: "收藏夹",
+                secUser: "用户参数",
+                secModel: "模型参数",
+                colName: "名称",
+                colUnit: "单位",
+                colExpr: "表达式",
+                colValue: "值",
+                colComment: "注释",
+                commentPh: "添加注释",
+                favAdd: "添加到收藏夹",
+                favRemove: "从收藏夹中移除",
+                e_missing: "请输入名称和值。",
+                e_no_design: "没有活动的设计文档。",
+                e_not_found: "未找到参数。",
+                e_exists: "已存在同名参数。",
+                e_in_use: "无法删除：该参数正被模型或其他参数使用。",
+                e_not_user: "只能删除用户参数。",
+                e_empty: "公式为空。",
+                e_parens: "括号不匹配：每个“(”都需要对应的“)”。",
+                e_unknown: "未知名称：{names}。它不是参数、函数或单位。",
+                e_self: "参数不能引用自身。",
+                e_formula: "公式不正确。请检查参数名称、单位和括号。",
+                e_name: "名称无效：只能使用字母、数字和下划线，且不能以数字开头。",
+                resizeCol: "拖动以调整列宽（双击恢复默认）"
+            }
+        };
+
+        const LANGS = [['en', 'English'], ['fr', 'Français'], ['de', 'Deutsch'], ['es', 'Español'],
+                       ['it', 'Italiano'], ['pt', 'Português'], ['ja', '日本語'], ['zh', '中文']];
+        let langPref = 'auto';
+        let fusionLang = null;
+
+        function guessLang() {
+            const n = (navigator.language || 'en').toLowerCase().slice(0, 2);
+            return I18N[n] ? n : 'en';
+        }
+        function effectiveLang() {
+            if (langPref !== 'auto' && I18N[langPref]) return langPref;
+            return fusionLang && I18N[fusionLang] ? fusionLang : guessLang();
+        }
+        let lang = effectiveLang();
+        const t = (key, vars) => {
+            let s = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+            if (vars) for (const k in vars) s = s.replace('{' + k + '}', vars[k]);
+            return s;
+        };
+
+        // Message d'erreur explicite : code traduit + détail renvoyé par Fusion pour les formules
+        const FORMULA_CODES = /^e_(formula|unknown|parens|self|empty)$/;
+        function errText(r) {
+            const code = r && r.error;
+            if (!code) return t('invalid');
+            let text = I18N.en[code] ? t(code, r.args) : code;
+            if (r.fusion && FORMULA_CODES.test(code)) text += ' (Fusion: ' + r.fusion + ')';
+            return text;
+        }
+
+        function applyTheme(theme) {
+            let v = theme;
+            if (!v || v === 'device') {
+                const light = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+                v = light ? 'lightgray' : 'darkgray';
+            }
+            document.documentElement.dataset.theme = v;
+        }
+
+        function buildLangSelect() {
+            const sel = $('#lang');
+            sel.replaceChildren();
+            const auto = document.createElement('option');
+            auto.value = 'auto';
+            auto.textContent = t('auto');
+            sel.appendChild(auto);
+            LANGS.forEach(([code, label]) => {
+                const o = document.createElement('option');
+                o.value = code;
+                o.textContent = label;
+                sel.appendChild(o);
+            });
+            sel.value = langPref;
+        }
+
+        const UNITS = ['mm', 'cm', 'm', 'in', 'ft', 'deg', ''];
+
+        function buildUnits() {
+            const sel = $('#f-unit');
+            const current = sel.value || state.defaultUnit;
+            const units = UNITS.includes(state.defaultUnit) ? UNITS : [state.defaultUnit, ...UNITS];
+            sel.replaceChildren();
+            units.forEach(u => {
+                const o = document.createElement('option');
+                o.value = u;
+                o.textContent = u === '' ? t('unitless') : u;
+                sel.appendChild(o);
+            });
+            sel.value = units.includes(current) ? current : state.defaultUnit;
+        }
+
+        function applyI18n() {
+            document.documentElement.lang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+            document.querySelectorAll('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.dataset.i18nPh); });
+            document.querySelectorAll('[data-i18n-aria]').forEach(e => e.setAttribute('aria-label', t(e.dataset.i18nAria)));
+            document.querySelectorAll('[data-i18n-title]').forEach(e => {
+                e.title = t(e.dataset.i18nTitle);
+                e.setAttribute('aria-label', t(e.dataset.i18nTitle));
+            });
+            buildUnits();
+            buildLangSelect();
+        }
+
+        /* ---------- Python -> HTML ---------- */
+        window.fusionJavaScriptHandler = {
+            handle: function (action, data) {
+                try {
+                    const msg = JSON.parse(data);
+                    if (action === 'updateList') {
+                        applyTheme(msg.theme);
+                        applyColumns(msg.columns);
+                        if (msg.fusionLang) fusionLang = msg.fusionLang;
+                        if (msg.langPref) langPref = msg.langPref;
+                        const unitChanged = msg.defaultUnit && msg.defaultUnit !== state.defaultUnit;
+                        if (unitChanged) state.defaultUnit = msg.defaultUnit;
+                        const newLang = effectiveLang();
+                        const langChanged = newLang !== lang;
+                        if (langChanged || unitChanged) { lang = newLang; applyI18n(); }
+                        else buildLangSelect();
+                        // Pas de rendu si rien n'a changé : on évite de perdre focus et défilement
+                        if (data !== lastRaw || langChanged || !state.loaded) {
+                            lastRaw = data;
+                            state.items = msg.items || [];
+                            state.loaded = true;
+                            render(true);
+                        }
+                    } else if (action === 'paramResult') {
+                        onResult(msg);
+                    } else if (action === 'addResult') {
+                        onAddResult(msg);
+                    } else if (action === 'deleteResult') {
+                        onDeleteResult(msg);
+                    }
+                } catch (e) {
+                    list.textContent = t('errPrefix') + e;
+                }
+                return 'OK';
+            }
+        };
+
+        /* ---------- HTML -> Python ---------- */
+        function send(action, payload) {
+            adsk.fusionSendData(action, typeof payload === 'string' ? payload : JSON.stringify(payload));
+        }
+
+        function request() {
+            if (window.adsk && typeof adsk.fusionSendData === 'function') {
+                send('getParams', '');
+                lastRequest = Date.now();
+                return true;
+            }
+            return false;
+        }
+
+        function waitAndRequest(tries) {
+            if (request()) return;
+            if (tries > 0) setTimeout(() => waitAndRequest(tries - 1), 200);
+            else list.replaceChildren(el('div', 'empty', t('noConn')));
+        }
+
+        /* ---------- Rendu ---------- */
+        function el(tag, cls, text) {
+            const e = document.createElement(tag);
+            if (cls) e.className = cls;
+            if (text !== undefined) e.textContent = text;
+            return e;
+        }
+
+        function fit(ta) {
+            ta.style.height = 'auto';
+            ta.style.height = ta.scrollHeight + 2 + 'px';
+        }
+
+        function updateMsg(row) {
+            const name = row.dataset.name;
+            const msg = row.querySelector('.msg');
+            if (state.errors[name]) msg.textContent = state.errors[name];
+            else if (row.classList.contains('dirty') || row.querySelector('.cmt').classList.contains('dirty')) msg.textContent = t('hint');
+            else msg.textContent = row.dataset.meta || '';
+        }
+
+        function revertExpr(row) {
+            const ta = row.querySelector('.expr');
+            ta.value = ta.dataset.orig;
+            row.classList.remove('dirty', 'error');
+            delete state.errors[row.dataset.name];
+            fit(ta);
+            updateMsg(row);
+        }
+
+        function revertComment(row) {
+            const cm = row.querySelector('.cmt');
+            cm.value = cm.dataset.orig;
+            cm.classList.remove('dirty');
+            updateMsg(row);
+        }
+
+        function commitExpr(row) {
+            if (rendering || row.dataset.pending) return;
+            const ta = row.querySelector('.expr');
+            const value = ta.value.trim();
+            if (!value || value === ta.dataset.orig) { revertExpr(row); return; }
+            row.dataset.pending = '1';
+            row.dataset.sent = value;
+            send('modifyParam', { name: row.dataset.name, value: value });
+        }
+
+        function commitComment(row) {
+            if (rendering || row.dataset.cpending) return;
+            const cm = row.querySelector('.cmt');
+            const value = cm.value.trim();
+            if (value === cm.dataset.orig) { revertComment(row); return; }
+            row.dataset.cpending = '1';
+            row.dataset.csent = value;
+            send('setComment', { name: row.dataset.name, comment: value });
+        }
+
+        function makeRow(p, drafts) {
+            const row = el('div', 'row');
+            row.dataset.name = p.name;
+            row.dataset.meta = p.kind === 'model'
+                ? (p.role || '') + (p.creator ? ' (' + p.creator + ')' : '')
+                : '';
+
+            const star = el('button', 'star' + (p.favorite ? ' on' : ''), p.favorite ? '★' : '☆');
+            star.title = p.favorite ? t('favRemove') : t('favAdd');
+            star.setAttribute('aria-label', star.title);
+            star.setAttribute('aria-pressed', String(!!p.favorite));
+            star.addEventListener('click', () => send('setFavorite', { name: p.name, value: !p.favorite }));
+
+            const name = el('span', 'name', p.name);
+            name.title = p.name;
+            const unit = el('span', 'unit', p.unit || '');
+            const val = el('span', 'val', p.value || '');
+            val.title = p.value || '';
+            row.append(star, name, unit, val);
+
+            if (p.kind === 'user') {
+                const del = el('button', 'del', '✕');
+                del.title = t('del');
+                del.setAttribute('aria-label', t('del') + ' ' + p.name);
+                del.addEventListener('click', () => {
+                    if (del.classList.contains('confirm')) { send('deleteParam', { name: p.name }); return; }
+                    del.classList.add('confirm');
+                    del.textContent = t('confirmDel');
+                    setTimeout(() => {
+                        if (del.isConnected) { del.classList.remove('confirm'); del.textContent = '✕'; }
+                    }, 3000);
+                });
+                row.appendChild(del);
+            }
+
+            const ta = el('textarea', 'expr');
+            ta.rows = 1;
+            ta.spellcheck = false;
+            ta.value = p.expression;
+            ta.dataset.orig = p.expression;
+            ta.setAttribute('aria-label', t('colExpr') + ' ' + p.name);
+
+            const cm = el('input', 'cmt');
+            cm.type = 'text';
+            cm.value = p.comment || '';
+            cm.dataset.orig = p.comment || '';
+            cm.placeholder = t('commentPh');
+            cm.setAttribute('aria-label', t('colComment') + ' ' + p.name);
+
+            if (drafts.has('e:' + p.name)) { ta.value = drafts.get('e:' + p.name); row.classList.add('dirty'); }
+            if (drafts.has('c:' + p.name)) { cm.value = drafts.get('c:' + p.name); cm.classList.add('dirty'); }
+            if (state.errors[p.name]) row.classList.add('error');
+            if (state.flash === p.name) {
+                row.classList.add('saved');
+                state.flash = null;
+                setTimeout(() => row.classList.remove('saved'), 900);
+            }
+
+            ta.addEventListener('input', () => {
+                ta.value = ta.value.replace(/[\r\n]+/g, ' ');
+                fit(ta);
+                row.classList.toggle('dirty', ta.value !== ta.dataset.orig);
+                row.classList.remove('error');
+                delete state.errors[p.name];
+                updateMsg(row);
+            });
+            ta.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); commitExpr(row); }
+                else if (e.key === 'Escape') { revertExpr(row); }
+            });
+            ta.addEventListener('blur', () => { if (row.classList.contains('dirty')) commitExpr(row); });
+
+            cm.addEventListener('input', () => {
+                cm.classList.toggle('dirty', cm.value !== cm.dataset.orig);
+                delete state.errors[p.name];
+                row.classList.remove('error');
+                updateMsg(row);
+            });
+            cm.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); commitComment(row); }
+                else if (e.key === 'Escape') { revertComment(row); }
+            });
+            cm.addEventListener('blur', () => { if (cm.classList.contains('dirty')) commitComment(row); });
+
+            row.append(ta, cm, el('div', 'msg'));
+            updateMsg(row);
+            return row;
+        }
+
+        // Recherche : nom, formule, commentaire, valeur, unité, type (« Distance »…) et esquisse/fonction d'origine
+        function matches(p, q) {
+            if (!q) return true;
+            return [p.name, p.expression, p.comment, p.value, p.unit, p.role, p.creator]
+                .some(v => (v || '').toLowerCase().includes(q));
+        }
+
+        function makeSection(sec, drafts, q) {
+            const open = !!q || !state.collapsed[sec.id];
+            const wrap = el('section', 'sec');
+            const head = el('div', 'sechead');
+
+            const toggle = el('button', 'sectoggle');
+            toggle.setAttribute('aria-expanded', String(open));
+            toggle.append(el('span', 'chev', open ? '▾' : '▸'), el('span', '', sec.title),
+                          el('span', 'count', String(sec.rows.length)));
+            toggle.addEventListener('click', () => { state.collapsed[sec.id] = open; render(true); });
+            head.appendChild(toggle);
+
+            if (sec.id === 'user') {
+                const add = el('button', 'secadd', '+');
+                add.title = t('add');
+                add.setAttribute('aria-label', t('add'));
+                add.addEventListener('click', openForm);
+                head.appendChild(add);
+            }
+            wrap.appendChild(head);
+
+            if (open) {
+                if (!sec.rows.length) wrap.appendChild(el('div', 'empty', t('emptyUser')));
+                sec.rows.forEach(p => wrap.appendChild(makeRow(p, drafts)));
+            }
+            return wrap;
+        }
+
+        function render(keepDrafts) {
+            rendering = true;
+
+            // Conserver saisies non validées et focus pendant un rafraîchissement
+            const drafts = new Map();
+            let focusKey = null, selStart = 0, selEnd = 0;
+            if (keepDrafts) {
+                list.querySelectorAll('.row').forEach(r => {
+                    const name = r.dataset.name;
+                    const ta = r.querySelector('.expr');
+                    const cm = r.querySelector('.cmt');
+                    if (r.classList.contains('dirty')) drafts.set('e:' + name, ta.value);
+                    if (cm.classList.contains('dirty')) drafts.set('c:' + name, cm.value);
+                    const active = document.activeElement;
+                    if (active === ta || active === cm) {
+                        focusKey = (active === ta ? 'e:' : 'c:') + name;
+                        selStart = active.selectionStart;
+                        selEnd = active.selectionEnd;
+                    }
+                });
+            }
+            const scroll = list.scrollTop;
+
+            const q = state.filter.trim().toLowerCase();
+            const rows = state.items.filter(p => matches(p, q));
+            const sections = [
+                { id: 'fav', title: t('secFav'), rows: rows.filter(p => p.favorite) },
+                { id: 'user', title: t('secUser'), rows: rows.filter(p => p.kind === 'user' && !p.favorite) },
+                { id: 'model', title: t('secModel'), rows: rows.filter(p => p.kind === 'model' && !p.favorite) }
+            ];
+
+            list.replaceChildren(colhead);
+            if (!state.loaded) {
+                list.appendChild(el('div', 'empty', t('loading')));
+            } else if (q && !rows.length) {
+                list.appendChild(el('div', 'empty', t('noResult', { q: state.filter.trim() })));
+            } else {
+                sections.forEach(sec => {
+                    const visible = sec.id === 'user' ? !q || sec.rows.length : sec.rows.length;
+                    if (visible) list.appendChild(makeSection(sec, drafts, q));
+                });
+                list.querySelectorAll('.expr').forEach(fit);
+            }
+
+            colhead.hidden = !list.querySelector('.row');
+            list.scrollTop = scroll;
+            const saved = list.querySelector('.row.saved');
+            if (saved) saved.scrollIntoView({ block: 'nearest' });
+
+            if (focusKey) {
+                const name = focusKey.slice(2);
+                const row = [...list.querySelectorAll('.row')].find(r => r.dataset.name === name);
+                if (row) {
+                    const target = row.querySelector(focusKey.startsWith('e:') ? '.expr' : '.cmt');
+                    target.focus();
+                    target.setSelectionRange(selStart, selEnd);
+                }
+            }
+            rendering = false;
+        }
+
+        function findRow(name) {
+            return [...list.querySelectorAll('.row')].find(r => r.dataset.name === name);
+        }
+
+        function onResult(msg) {
+            const row = findRow(msg.name);
+            if (!row) return;
+            const field = msg.field || 'expression';
+            if (field === 'expression') {
+                const ta = row.querySelector('.expr');
+                delete row.dataset.pending;
+                if (msg.ok) {
+                    delete state.errors[msg.name];
+                    ta.dataset.orig = row.dataset.sent || ta.value;
+                    ta.value = ta.dataset.orig;
+                    row.classList.remove('dirty', 'error');
+                    state.flash = msg.name;
+                    fit(ta);
+                } else {
+                    state.errors[msg.name] = errText(msg);
+                    row.classList.add('error');
+                }
+            } else if (field === 'comment') {
+                const cm = row.querySelector('.cmt');
+                delete row.dataset.cpending;
+                if (msg.ok) {
+                    delete state.errors[msg.name];
+                    cm.dataset.orig = row.dataset.csent || '';
+                    cm.value = cm.dataset.orig;
+                    cm.classList.remove('dirty');
+                } else {
+                    state.errors[msg.name] = errText(msg);
+                    row.classList.add('error');
+                }
+            } else if (!msg.ok) {
+                state.errors[msg.name] = errText(msg);
+                row.classList.add('error');
+            }
+            updateMsg(row);
+        }
+
+        function onDeleteResult(msg) {
+            if (msg.ok) return; // la liste mise à jour arrive juste après
+            const row = findRow(msg.name);
+            if (!row) return;
+            state.errors[msg.name] = errText(msg);
+            row.classList.add('error');
+            updateMsg(row);
+        }
+
+        /* ---------- Ajout d'un paramètre ---------- */
+        function openForm() {
+            $('#footer').hidden = false;
+            $('#add-error').textContent = '';
+            $('#f-name').focus();
+        }
+
+        function closeForm(reset) {
+            $('#footer').hidden = true;
+            $('#add-error').textContent = '';
+            if (reset) {
+                ['#f-name', '#f-expr', '#f-comment'].forEach(s => { $(s).value = ''; });
+                $('#f-fav').checked = false;
+            }
+        }
+
+        function submitForm() {
+            const name = $('#f-name').value.trim();
+            const expression = $('#f-expr').value.trim();
+            if (!name || !expression) { $('#add-error').textContent = t('e_missing'); return; }
+            $('#add-error').textContent = '';
+            send('addParam', {
+                name: name,
+                expression: expression,
+                unit: $('#f-unit').value,
+                comment: $('#f-comment').value.trim(),
+                favorite: $('#f-fav').checked
+            });
+        }
+
+        function onAddResult(msg) {
+            if (msg.ok) {
+                state.flash = msg.name;
+                closeForm(true);
+            } else {
+                $('#add-error').textContent = errText(msg);
+            }
+        }
+
+        $('#add-cancel').addEventListener('click', () => closeForm(false));
+        $('#add-submit').addEventListener('click', submitForm);
+        ['#f-name', '#f-expr', '#f-comment'].forEach(s => {
+            $(s).addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); submitForm(); }
+                else if (e.key === 'Escape') { closeForm(false); }
+            });
+        });
+
+        /* ---------- Interactions générales ---------- */
+        $('#refresh').addEventListener('click', request);
+
+        $('#lang').addEventListener('change', e => {
+            langPref = e.target.value;
+            lang = effectiveLang();
+            applyI18n();
+            render(true);
+            send('setLanguage', { lang: langPref });
+        });
+
+        $('#search').addEventListener('input', e => {
+            state.filter = e.target.value;
+            render(true);
+        });
+        $('#search').addEventListener('keydown', e => {
+            if (e.key === 'Escape') { e.target.value = ''; state.filter = ''; render(true); }
+        });
+
+        // Les valeurs évoluent quand on modifie le modèle : on rafraîchit au retour sur la palette
+        window.addEventListener('focus', () => {
+            if (Date.now() - lastRequest > 1500) request();
+        });
+        window.addEventListener('resize', () => list.querySelectorAll('.expr').forEach(fit));
+
+        window.addEventListener('load', () => {
+            applyI18n();
+            render(false);
+            waitAndRequest(25);
+        });
+    </script>
+</body>
+</html>

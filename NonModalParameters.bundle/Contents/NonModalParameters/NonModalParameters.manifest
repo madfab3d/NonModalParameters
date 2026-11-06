@@ -1,0 +1,14 @@
+{
+    "autodeskProduct": "Fusion",
+    "type": "addin",
+    "id": "796b475c-c7d1-4be0-90ac-dcb10ff801a6",
+    "author": "MadFab3D",
+    "description": {
+        "": "Non-modal palette to view, edit, add and delete user and model parameters.",
+        "fr-FR": "Palette non modale pour consulter, modifier, ajouter et supprimer les paramètres utilisateur et du modèle."
+    },
+    "version": "1.0.0",
+    "runOnStartup": true,
+    "supportedOS": "windows",
+    "editEnabled": false
+}
