@@ -270,8 +270,8 @@ def send_params(palette=None):
 # Mots reconnus dans une formule (fonctions et unités courantes). Sert uniquement à
 # expliquer une erreur après un refus de Fusion, jamais à valider une formule.
 KNOWN_WORDS = set((
-    "sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh atanh sqrt cbrt pow exp "
-    "log ln log10 abs min max floor ceil round sign pi e "
+    "sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh sqrt abs sign exp ln log "
+    "floor ceil round max min pow random pi e "
     "mm cm m km in ft yd mil deg rad ul degree degrees radian radians inch foot feet "
     "meter metre millimeter centimeter kg g lb oz s sec"
 ).split())
@@ -396,6 +396,28 @@ def handle_add(design, info):
     return result
 
 
+def handle_rename(design, info):
+    import re
+    name = info.get('name') or ''
+    new_name = (info.get('newName') or '').strip()
+    result = {'name': name, 'field': 'name', 'newName': new_name, 'ok': False, 'error': 'e_no_design'}
+    if design:
+        param = find_param(design, name)
+        if not param:
+            result['error'] = 'e_not_found'
+        elif not re.match(r'^[^\W\d]\w*$', new_name):
+            result['error'] = 'e_name'
+        elif new_name != name and design.allParameters.itemByName(new_name):
+            result['error'] = 'e_exists'
+        else:
+            try:
+                param.name = new_name
+                result = {'name': name, 'field': 'name', 'newName': new_name, 'ok': True}
+            except:
+                result['error'] = last_error('e_name')
+    return result
+
+
 def handle_delete(design, info):
     name = info.get('name') or ''
     result = {'name': name, 'ok': False, 'error': 'e_no_design'}
@@ -450,6 +472,9 @@ class HTMLEventHandler(adsk.core.HTMLEventHandler):
 
             if action == 'modifyParam':
                 result = handle_modify(design, json.loads(html_args.data))
+                reply = 'paramResult'
+            elif action == 'renameParam':
+                result = handle_rename(design, json.loads(html_args.data))
                 reply = 'paramResult'
             elif action == 'setComment':
                 result = handle_comment(design, json.loads(html_args.data))

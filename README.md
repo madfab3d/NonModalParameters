@@ -4,9 +4,9 @@
 
 A dockable, non-modal palette to view, edit, add and delete your Fusion parameters without opening the *Change Parameters* dialog. It stays open while you work.
 
-![Palette, wide layout](docs/preview-wide_en.png)
+![Palette, wide layout](docs/preview-wide.png)
 
-![Palette, wide layout](docs/preview-narrow_en.png)
+> Previews are renderings of the palette with sample data, not Fusion screenshots.
 
 ## Features
 
@@ -14,6 +14,8 @@ A dockable, non-modal palette to view, edit, add and delete your Fusion paramete
 - **Long formulas stay readable**: the formula field uses the full width, wraps and grows.
 - **Search** by name, formula, comment, value, unit, type (for example *Distance*) or the sketch or feature that created the parameter.
 - **Edit expressions and comments.** Press Enter to apply, Esc to cancel.
+- **Formula autocomplete**: suggestions for your parameters (with their value), Fusion functions and units as you type. Press Ctrl+Space to open the list at any time.
+- **Rename parameters**: double-click the name, or press F2.
 - **Favorites are Fusion's own**, so they are shared with the built-in dialog.
 - **Add and delete user parameters.** Deleting a parameter that is in use is refused with a clear message.
 - **Clear error messages** for incorrect formulas: unknown name, unbalanced parentheses, a parameter referring to itself, invalid name.
@@ -35,7 +37,7 @@ Windows only.
 ## Usage
 
 1. Open a design and click **Quick Parameters** in **SOLID › MODIFY**.
-2. Edit a formula or a comment. Enter applies it, Esc cancels it.
+2. Edit a formula or a comment. Enter applies it, Esc cancels it. While typing a formula, use Up/Down and Enter (or Tab) to pick a suggestion.
 3. Click **+** in the *User Parameters* header to add a parameter. Click **✕**, then **Confirm**, to delete one.
 4. Click ☆ to add a parameter to your favorites.
 
@@ -71,9 +73,9 @@ python tools/check_bundle.py NonModalParameters.bundle
 
 Une palette ancrable et non modale pour consulter, modifier, ajouter et supprimer vos paramètres Fusion sans ouvrir la boîte *Modifier les paramètres*. Elle reste ouverte pendant que vous travaillez.
 
-![Palette, affichage étroit](docs/preview-wide_fr.png)
+![Palette, affichage étroit](docs/preview-narrow.png)
 
-![Palette, affichage étroit](docs/preview-narrow_fr.png)
+> Les aperçus sont des rendus de la palette avec des données d'exemple, pas des captures de Fusion.
 
 ### Fonctionnalités
 
@@ -81,6 +83,8 @@ Une palette ancrable et non modale pour consulter, modifier, ajouter et supprime
 - **Formules longues lisibles** : le champ de formule occupe toute la largeur, passe à la ligne et s'agrandit.
 - **Recherche** par nom, formule, commentaire, valeur, unité, type (par exemple *Distance*) ou esquisse / fonction qui a créé le paramètre.
 - **Modification des formules et des commentaires.** Entrée applique, Échap annule.
+- **Autocomplétion des formules** : suggestions de vos paramètres (avec leur valeur), des fonctions et des unités de Fusion pendant la saisie. Ctrl+Espace ouvre la liste à tout moment.
+- **Renommer un paramètre** : double-clic sur son nom, ou touche F2.
 - **Favoris natifs de Fusion**, donc partagés avec la fenêtre intégrée.
 - **Ajout et suppression de paramètres utilisateur.** La suppression d'un paramètre utilisé est refusée avec un message clair.
 - **Messages d'erreur explicites** pour les formules incorrectes : nom inconnu, parenthèses non appariées, paramètre qui se référence lui-même, nom invalide.
@@ -102,7 +106,7 @@ Windows uniquement.
 ### Utilisation
 
 1. Ouvrez un design et cliquez sur **Paramètres rapides** dans **SOLIDE › MODIFIER**.
-2. Modifiez une formule ou un commentaire. Entrée l'applique, Échap l'annule.
+2. Modifiez une formule ou un commentaire. Entrée l'applique, Échap l'annule. Pendant la saisie d'une formule, choisissez une suggestion avec les flèches haut/bas puis Entrée (ou Tab).
 3. Cliquez sur **+** dans l'en-tête *Paramètres utilisateur* pour ajouter un paramètre. Cliquez sur **✕**, puis **Confirmer**, pour en supprimer un.
 4. Cliquez sur ☆ pour ajouter un paramètre à vos favoris.
 

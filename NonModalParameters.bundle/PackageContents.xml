@@ -5,7 +5,7 @@
                     AutodeskProduct="Fusion360"
                     Name="NonModalParameters"
                     Description="Non-modal palette to view, edit, add and delete user and model parameters."
-                    AppVersion="1.0.0"
+                    AppVersion="2.0.0"
                     Author="MadFab3D"
                     ProductCode="{43687b9f-22d1-4f18-9963-2f3910bf5d34}"
                     UpgradeCode="{9b2e6c1a-5d37-4f80-a1c4-7e3f0d8b6a52}">
@@ -13,7 +13,7 @@
   <Components>
     <RuntimeRequirements OS="Win64" Platform="Fusion 360" />
     <ComponentEntry AppName="NonModalParameters"
-                    Version="1.0.0"
+                    Version="2.0.0"
                     ModuleName="./Contents/NonModalParameters/NonModalParameters.manifest"
                     AppDescription="Non-modal palette to view, edit, add and delete user and model parameters."
                     Author="MadFab3D" />

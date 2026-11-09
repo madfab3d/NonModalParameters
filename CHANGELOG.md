@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0
+
+- **Formula autocomplete**: while typing a formula, suggestions list the document's parameters (with their current value), Fusion's functions and units. Up/Down to choose, Enter or Tab to insert, Esc to close, Ctrl+Space to open the list at any time. Multi-argument functions use Fusion's `;` separator, for example `max(a; b)`.
+- **Rename parameters**: double-click a parameter's name, or press F2, to rename it. Invalid or already used names are rejected with a clear message.
+- Error diagnostics now follow the function list of Fusion's documentation.
+- Shorter "Auto" entry in the language selector.
+
 ## 1.0.0
 
 First release.

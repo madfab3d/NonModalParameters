@@ -237,6 +237,49 @@
     .grip:hover::after, .grip:focus-visible::after, .grip.drag::after { background: var(--accent); }
     .grip:focus-visible { outline: none; }
 
+    /* Autocomplétion des formules et renommage */
+    .ac {
+        position: fixed;
+        z-index: 60;
+        max-height: 190px;
+        overflow-y: auto;
+        padding: 2px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+        font-size: 12.5px;
+    }
+    .ac-item { display: flex; align-items: baseline; gap: 10px; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+    .ac-item.sel { background: var(--accent); color: var(--onaccent); }
+    .ac-name { font-family: var(--mono); }
+    .ac-info {
+        margin-left: auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--muted);
+        font: 11.5px var(--mono);
+    }
+    .ac-kind { flex-shrink: 0; color: var(--muted); font-size: 11px; }
+    .ac-item.sel .ac-info, .ac-item.sel .ac-kind { color: inherit; opacity: .85; }
+    .rename {
+        grid-area: name;
+        min-width: 0;
+        width: 100%;
+        padding: 2px 6px;
+        background: var(--field);
+        color: var(--text);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+        box-shadow: 0 0 0 1px var(--accent);
+        font: inherit;
+        font-weight: 600;
+        outline: none;
+    }
+    .name:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+
     /* Formulaire d'ajout */
     #footer { padding: 8px 10px 10px; border-top: 1px solid var(--line); background: var(--panel); }
     .btn {
@@ -433,7 +476,12 @@
                 e_self: "A parameter cannot refer to itself.",
                 e_formula: "Incorrect formula. Check parameter names, units and parentheses.",
                 e_name: "Invalid name: use letters, digits and underscores only, and do not start with a digit.",
-                resizeCol: "Drag to resize column (double-click to reset)"
+                resizeCol: "Drag to resize column (double-click to reset)",
+                renameHint: "Double-click to rename (F2)",
+                kindUser: "User parameter",
+                kindModel: "Model parameter",
+                kindFunc: "Function",
+                kindUnit: "Unit"
             },
             fr: {
                 filter: "Rechercher nom, formule, commentaire, esquisse…",
@@ -481,7 +529,12 @@
                 e_self: "Un paramètre ne peut pas se référencer lui-même.",
                 e_formula: "Formule incorrecte. Vérifiez les noms de paramètres, les unités et les parenthèses.",
                 e_name: "Nom invalide : lettres, chiffres et _ uniquement, sans commencer par un chiffre.",
-                resizeCol: "Glisser pour redimensionner la colonne (double-clic : réinitialiser)"
+                resizeCol: "Glisser pour redimensionner la colonne (double-clic : réinitialiser)",
+                renameHint: "Double-clic pour renommer (F2)",
+                kindUser: "Paramètre utilisateur",
+                kindModel: "Paramètre du modèle",
+                kindFunc: "Fonction",
+                kindUnit: "Unité"
             },
             de: {
                 filter: "Name, Formel, Kommentar, Skizze suchen…",
@@ -529,7 +582,12 @@
                 e_self: "Ein Parameter kann sich nicht selbst referenzieren.",
                 e_formula: "Falsche Formel. Prüfen Sie Parameternamen, Einheiten und Klammern.",
                 e_name: "Ungültiger Name: nur Buchstaben, Ziffern und Unterstriche, nicht mit einer Ziffer beginnen.",
-                resizeCol: "Ziehen, um die Spaltenbreite zu ändern (Doppelklick: zurücksetzen)"
+                resizeCol: "Ziehen, um die Spaltenbreite zu ändern (Doppelklick: zurücksetzen)",
+                renameHint: "Doppelklick zum Umbenennen (F2)",
+                kindUser: "Benutzerparameter",
+                kindModel: "Modellparameter",
+                kindFunc: "Funktion",
+                kindUnit: "Einheit"
             },
             es: {
                 filter: "Buscar nombre, fórmula, comentario, boceto…",
@@ -577,7 +635,12 @@
                 e_self: "Un parámetro no puede hacer referencia a sí mismo.",
                 e_formula: "Fórmula incorrecta. Compruebe los nombres de parámetros, las unidades y los paréntesis.",
                 e_name: "Nombre no válido: solo letras, dígitos y guiones bajos, sin empezar por un dígito.",
-                resizeCol: "Arrastre para cambiar el ancho de la columna (doble clic: restablecer)"
+                resizeCol: "Arrastre para cambiar el ancho de la columna (doble clic: restablecer)",
+                renameHint: "Doble clic para cambiar el nombre (F2)",
+                kindUser: "Parámetro de usuario",
+                kindModel: "Parámetro del modelo",
+                kindFunc: "Función",
+                kindUnit: "Unidad"
             },
             it: {
                 filter: "Cerca nome, formula, commento, schizzo…",
@@ -625,7 +688,12 @@
                 e_self: "Un parametro non può fare riferimento a se stesso.",
                 e_formula: "Formula non corretta. Controlla nomi dei parametri, unità e parentesi.",
                 e_name: "Nome non valido: solo lettere, cifre e trattini bassi, senza iniziare con una cifra.",
-                resizeCol: "Trascina per ridimensionare la colonna (doppio clic: ripristina)"
+                resizeCol: "Trascina per ridimensionare la colonna (doppio clic: ripristina)",
+                renameHint: "Doppio clic per rinominare (F2)",
+                kindUser: "Parametro utente",
+                kindModel: "Parametro del modello",
+                kindFunc: "Funzione",
+                kindUnit: "Unità"
             },
             pt: {
                 filter: "Buscar nome, fórmula, comentário, esboço…",
@@ -673,7 +741,12 @@
                 e_self: "Um parâmetro não pode referenciar a si mesmo.",
                 e_formula: "Fórmula incorreta. Verifique os nomes dos parâmetros, as unidades e os parênteses.",
                 e_name: "Nome inválido: use apenas letras, dígitos e sublinhados, sem começar por um dígito.",
-                resizeCol: "Arraste para redimensionar a coluna (clique duplo: redefinir)"
+                resizeCol: "Arraste para redimensionar a coluna (clique duplo: redefinir)",
+                renameHint: "Clique duplo para renomear (F2)",
+                kindUser: "Parâmetro do usuário",
+                kindModel: "Parâmetro do modelo",
+                kindFunc: "Função",
+                kindUnit: "Unidade"
             },
             ja: {
                 filter: "名前・式・コメント・スケッチを検索…",
@@ -721,7 +794,12 @@
                 e_self: "パラメータは自分自身を参照できません。",
                 e_formula: "式が正しくありません。パラメータ名、単位、かっこを確認してください。",
                 e_name: "名前が正しくありません。英数字とアンダースコアのみ使用でき、数字で始めることはできません。",
-                resizeCol: "ドラッグで列の幅を変更（ダブルクリックで初期化）"
+                resizeCol: "ドラッグで列の幅を変更（ダブルクリックで初期化）",
+                renameHint: "ダブルクリックで名前を変更 (F2)",
+                kindUser: "ユーザー パラメータ",
+                kindModel: "モデル パラメータ",
+                kindFunc: "関数",
+                kindUnit: "単位"
             },
             zh: {
                 filter: "搜索名称、公式、注释、草图…",
@@ -769,7 +847,12 @@
                 e_self: "参数不能引用自身。",
                 e_formula: "公式不正确。请检查参数名称、单位和括号。",
                 e_name: "名称无效：只能使用字母、数字和下划线，且不能以数字开头。",
-                resizeCol: "拖动以调整列宽（双击恢复默认）"
+                resizeCol: "拖动以调整列宽（双击恢复默认）",
+                renameHint: "双击重命名 (F2)",
+                kindUser: "用户参数",
+                kindModel: "模型参数",
+                kindFunc: "函数",
+                kindUnit: "单位"
             }
         };
 
@@ -985,7 +1068,12 @@
             star.addEventListener('click', () => send('setFavorite', { name: p.name, value: !p.favorite }));
 
             const name = el('span', 'name', p.name);
-            name.title = p.name;
+            name.title = p.name + ' (' + t('renameHint') + ')';
+            name.tabIndex = 0;
+            name.addEventListener('dblclick', () => startRename(row, name, p));
+            name.addEventListener('keydown', e => {
+                if (e.key === 'F2' || e.key === 'Enter') { e.preventDefault(); startRename(row, name, p); }
+            });
             const unit = el('span', 'unit', p.unit || '');
             const val = el('span', 'val', p.value || '');
             val.title = p.value || '';
@@ -1012,6 +1100,7 @@
             ta.value = p.expression;
             ta.dataset.orig = p.expression;
             ta.setAttribute('aria-label', t('colExpr') + ' ' + p.name);
+            attachAutocomplete(ta, () => p.name);   // doit précéder les autres écouteurs de touches du champ
 
             const cm = el('input', 'cmt');
             cm.type = 'text';
@@ -1040,6 +1129,7 @@
             ta.addEventListener('keydown', e => {
                 if (e.key === 'Enter') { e.preventDefault(); commitExpr(row); }
                 else if (e.key === 'Escape') { revertExpr(row); }
+                else if (e.key === 'F2') { e.preventDefault(); startRename(row, name, p); }
             });
             ta.addEventListener('blur', () => { if (row.classList.contains('dirty')) commitExpr(row); });
 
@@ -1097,6 +1187,7 @@
 
         function render(keepDrafts) {
             rendering = true;
+            acClose();
 
             // Conserver saisies non validées et focus pendant un rafraîchissement
             const drafts = new Map();
@@ -1190,6 +1281,14 @@
                     state.errors[msg.name] = errText(msg);
                     row.classList.add('error');
                 }
+            } else if (field === 'name') {
+                if (msg.ok) {
+                    delete state.errors[msg.name];
+                    state.flash = msg.newName;
+                } else {
+                    state.errors[msg.name] = errText(msg);
+                    row.classList.add('error');
+                }
             } else if (!msg.ok) {
                 state.errors[msg.name] = errText(msg);
                 row.classList.add('error');
@@ -1205,6 +1304,191 @@
             row.classList.add('error');
             updateMsg(row);
         }
+
+        /* ---------- Renommer un paramètre (double-clic sur le nom, ou F2) ---------- */
+        function startRename(row, nameEl, p) {
+            if (row.querySelector('.rename')) return;
+            const input = el('input', 'rename');
+            input.type = 'text';
+            input.value = p.name;
+            input.spellcheck = false;
+            input.setAttribute('aria-label', t('renameHint'));
+            let finished = false;
+            const finish = apply => {
+                if (finished) return;
+                finished = true;
+                const v = input.value.trim();
+                if (input.isConnected) input.replaceWith(nameEl);
+                if (apply && v && v !== p.name) send('renameParam', { name: p.name, newName: v });
+            };
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); finish(true); nameEl.focus(); }
+                else if (e.key === 'Escape') { e.preventDefault(); finish(false); nameEl.focus(); }
+            });
+            input.addEventListener('blur', () => { if (!rendering) finish(true); });
+            nameEl.replaceWith(input);
+            input.focus();
+            input.select();
+        }
+
+        /* ---------- Autocomplétion (IntelliSense) dans la saisie des formules ----------
+           Propose les paramètres du document, les fonctions et les unités de Fusion.
+           Les fonctions viennent de la page « Parameters reference » de l'aide Fusion ;
+           plusieurs arguments se séparent par un point-virgule. */
+        const FUNCS = [
+            ['sin', 'sin(angle)'], ['cos', 'cos(angle)'], ['tan', 'tan(angle)'],
+            ['asin', 'asin(x)'], ['acos', 'acos(x)'], ['atan', 'atan(x)'],
+            ['sinh', 'sinh(angle)'], ['cosh', 'cosh(angle)'], ['tanh', 'tanh(angle)'],
+            ['asinh', 'asinh(x)'], ['acosh', 'acosh(x)'], ['atanh', 'atanh(x)'],
+            ['sqrt', 'sqrt(x)'], ['abs', 'abs(x)'], ['sign', 'sign(x)'], ['exp', 'exp(x)'],
+            ['ln', 'ln(x)'], ['log', 'log(x)'],
+            ['floor', 'floor(x)'], ['ceil', 'ceil(x)'], ['round', 'round(x)'],
+            ['max', 'max(a; b)'], ['min', 'min(a; b)'], ['pow', 'pow(x; n)'], ['random', 'random()']
+        ];
+        const UNIT_WORDS = ['mm', 'cm', 'm', 'in', 'ft', 'deg', 'rad', 'ul'];
+        const ac = { box: null, items: [], sel: 0, el: null, tok: null, suppress: false };
+        const WORD = /[\p{L}\p{N}_]/u;
+
+        function acClose() {
+            if (ac.box) ac.box.remove();
+            ac.box = null;
+            ac.items = [];
+            ac.el = null;
+        }
+
+        // Mot en cours de saisie à la position du curseur (les chiffres qui précèdent, comme dans « 25mm », sont ignorés)
+        function acToken(inp) {
+            const pos = inp.selectionStart;
+            if (pos !== inp.selectionEnd) return null;
+            const text = inp.value;
+            let s = pos;
+            while (s > 0 && WORD.test(text[s - 1])) s--;
+            let start = s;
+            while (start < pos && /[0-9]/.test(text[start])) start++;
+            let endAll = pos;
+            while (endAll < text.length && WORD.test(text[endAll])) endAll++;
+            return { start: start, end: pos, endAll: endAll, text: text.slice(start, pos) };
+        }
+
+        function acCandidates(prefix, ownName) {
+            const p = prefix.toLowerCase();
+            const all = [];
+            state.items.forEach(it => {
+                if (it.name === ownName) return;   // un paramètre ne peut pas se référencer lui-même
+                all.push({ label: it.name, insert: it.name, kind: it.kind === 'user' ? 'kindUser' : 'kindModel',
+                           info: it.value || '', order: it.kind === 'user' ? 0 : 1 });
+            });
+            FUNCS.forEach(([name, sig]) => all.push({
+                label: name, insert: name === 'random' ? 'random()' : name + '(', kind: 'kindFunc', info: sig, order: 2 }));
+            UNIT_WORDS.forEach(u => all.push({ label: u, insert: u, kind: 'kindUnit', info: '', order: 3 }));
+
+            const ranked = [];
+            all.forEach(c => {
+                const l = c.label.toLowerCase();
+                let score = -1;
+                if (!p) score = 1;
+                else if (l.startsWith(p)) score = 0;
+                else if (p.length >= 2 && l.includes(p)) score = 1;
+                if (score >= 0) ranked.push({ c, score });
+            });
+            ranked.sort((a, b) => a.score - b.score || a.c.order - b.c.order || a.c.label.localeCompare(b.c.label));
+            return ranked.slice(0, 40).map(r => r.c);
+        }
+
+        function acPosition() {
+            const box = ac.box;
+            if (!box || !ac.el) return;
+            const r = ac.el.getBoundingClientRect();
+            box.style.minWidth = Math.min(Math.max(r.width, 220), 340) + 'px';
+            box.style.maxHeight = '190px';
+            box.style.left = Math.max(4, Math.min(r.left, window.innerWidth - box.offsetWidth - 4)) + 'px';
+            // Sous le champ si la place suffit, sinon au-dessus ; la hauteur est limitée à la place disponible
+            const availBelow = window.innerHeight - r.bottom - 6;
+            const availAbove = r.top - 6;
+            const below = availBelow >= Math.min(box.offsetHeight, 140) || availBelow >= availAbove;
+            box.style.maxHeight = Math.max(60, Math.min(190, below ? availBelow : availAbove)) + 'px';
+            const h = box.offsetHeight;
+            box.style.top = (below ? r.bottom + 2 : Math.max(4, r.top - h - 2)) + 'px';
+        }
+
+        function acMark() {
+            [...ac.box.children].forEach((node, i) => {
+                const on = i === ac.sel;
+                node.classList.toggle('sel', on);
+                node.setAttribute('aria-selected', String(on));
+                if (on) node.scrollIntoView({ block: 'nearest' });
+            });
+        }
+
+        function acOpen(inp, ownName, force) {
+            if (ac.suppress) return;
+            const tok = acToken(inp);
+            if (!tok || (!tok.text && !force)) { acClose(); return; }
+            const items = acCandidates(tok.text, ownName());
+            if (!items.length || (!force && items.length === 1 && items[0].label === tok.text)) { acClose(); return; }
+
+            acClose();
+            ac.el = inp;
+            ac.tok = tok;
+            ac.items = items;
+            ac.sel = 0;
+            const box = el('div', 'ac');
+            box.setAttribute('role', 'listbox');
+            // mousedown + preventDefault : le champ garde le focus, donc pas de validation prématurée
+            box.addEventListener('mousedown', e => e.preventDefault());
+            items.forEach((it, i) => {
+                const row = el('div', 'ac-item');
+                row.setAttribute('role', 'option');
+                row.append(el('span', 'ac-name', it.label), el('span', 'ac-info', it.info), el('span', 'ac-kind', t(it.kind)));
+                row.addEventListener('mousedown', e => { e.preventDefault(); acAccept(i); });
+                box.appendChild(row);
+            });
+            document.body.appendChild(box);
+            ac.box = box;
+            acMark();
+            acPosition();
+        }
+
+        function acAccept(i) {
+            const it = ac.items[i];
+            const inp = ac.el;
+            const tok = ac.tok;
+            if (!it || !inp || !tok) return;
+            ac.suppress = true;
+            inp.value = inp.value.slice(0, tok.start) + it.insert + inp.value.slice(tok.endAll);
+            const caret = tok.start + it.insert.length;
+            inp.setSelectionRange(caret, caret);
+            inp.dispatchEvent(new Event('input', { bubbles: true }));   // met à jour l'état « modifié » et la hauteur
+            ac.suppress = false;
+            acClose();
+            inp.focus();
+        }
+
+        function attachAutocomplete(inp, ownName) {
+            // Enregistré avant les autres écouteurs du champ : il consomme les touches quand la liste est ouverte
+            inp.addEventListener('keydown', e => {
+                if (e.key === ' ' && e.ctrlKey) {
+                    e.preventDefault(); e.stopImmediatePropagation();
+                    acOpen(inp, ownName, true);
+                    return;
+                }
+                if (!ac.box || ac.el !== inp) return;
+                const consume = () => { e.preventDefault(); e.stopImmediatePropagation(); };
+                if (e.key === 'ArrowDown') { consume(); ac.sel = (ac.sel + 1) % ac.items.length; acMark(); }
+                else if (e.key === 'ArrowUp') { consume(); ac.sel = (ac.sel - 1 + ac.items.length) % ac.items.length; acMark(); }
+                else if (e.key === 'Enter' || e.key === 'Tab') { consume(); acAccept(ac.sel); }
+                else if (e.key === 'Escape') { consume(); acClose(); }
+            });
+            inp.addEventListener('input', () => acOpen(inp, ownName, false));
+            inp.addEventListener('blur', acClose);
+            inp.addEventListener('keyup', e => {
+                if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) acClose();
+            });
+        }
+
+        attachAutocomplete($('#f-expr'), () => $('#f-name').value.trim());
+        list.addEventListener('scroll', acClose);
+        window.addEventListener('resize', acClose);
 
         /* ---------- Ajout d'un paramètre ---------- */
         function openForm() {
