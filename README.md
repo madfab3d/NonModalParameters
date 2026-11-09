@@ -4,9 +4,9 @@
 
 A dockable, non-modal palette to view, edit, add and delete your Fusion parameters without opening the *Change Parameters* dialog. It stays open while you work.
 
-![Palette, wide layout](docs/preview-wide.png)
+![Palette, wide layout](docs/preview-wide_en.png)
 
-> Previews are renderings of the palette with sample data, not Fusion screenshots.
+![Palette, wide layout](docs/preview-narrow_en.png)
 
 ## Features
 
@@ -73,9 +73,9 @@ python tools/check_bundle.py NonModalParameters.bundle
 
 Une palette ancrable et non modale pour consulter, modifier, ajouter et supprimer vos paramètres Fusion sans ouvrir la boîte *Modifier les paramètres*. Elle reste ouverte pendant que vous travaillez.
 
-![Palette, affichage étroit](docs/preview-narrow.png)
+![Palette, wide layout](docs/preview-wide_fr.png)
 
-> Les aperçus sont des rendus de la palette avec des données d'exemple, pas des captures de Fusion.
+![Palette, wide layout](docs/preview-narrow_fr.png)
 
 ### Fonctionnalités
 
